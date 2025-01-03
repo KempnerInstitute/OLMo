@@ -621,6 +621,9 @@ class DataConfig(BaseConfig):
     timeout: int = 0
     seed: Optional[int] = None
     instance_filter: Optional[InstanceFilterConfig] = None
+    custom_dataset_class: Optional[str] = None
+    custom_dataset_module: Optional[str] = None
+    custom_dataset_args: Optional[Dict[str, Any]] = None
 
     @property
     def effective_memmap_dtype(self):

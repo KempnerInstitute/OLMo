@@ -1,7 +1,8 @@
+import importlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
-from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.data import DataLoader, DistributedSampler, Dataset
 
 from ..aliases import PathOrStr
 from ..config import DataConfig, TrainConfig
@@ -46,6 +47,30 @@ def build_memmap_dataset(
         label_mask_paths=cast(Optional[List[PathOrStr]], data_config.label_mask_paths),
         instance_filter_config=data_config.instance_filter,
     )
+
+
+def build_custom_dataset(train_config: TrainConfig) -> Dataset:
+    if not train_config.data.custom_dataset_class:
+        raise OLMoConfigurationError("custom_dataset_class is required when using a custom dataset")
+    dataset_class = train_config.data.custom_dataset_class
+    dataset_module = train_config.data.custom_dataset_module
+    if not dataset_module:
+        class_module = dataset_class.split(".") 
+        if len(class_module) < 2:
+            raise OLMoConfigurationError(
+                "when using custom_dataset_class, use the full module path of the class or specify custom_dataset_module"
+            )
+        dataset_module = ".".join(class_module[:-1])
+        dataset_class = class_module[-1]
+    module = importlib.import_module(dataset_module)
+    dataset_class = getattr(module, dataset_class)
+    return dataset_class(**train_config.data.custom_dataset_args)
+
+        
+
+    
+
+
 
 
 def build_eval_dataloader(
