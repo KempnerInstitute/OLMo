@@ -1,4 +1,5 @@
 import importlib
+import logging
 from typing import Optional, Tuple
 
 from torch.utils.data import Dataset
@@ -8,9 +9,13 @@ from ..exceptions import OLMoConfigurationError
 
 __all__ = ["build_custom_dataset"]
 
+LOGGER = logging.getLogger(__name__)
+
 def build_custom_dataset(train_config: TrainConfig) -> Dataset:
     if not train_config.data.custom_dataset.name:
         raise OLMoConfigurationError("custom_dataset_class is required when using a custom dataset")
+    LOGGER.warning("Using custom dataset class, deterministic training is not guaranteed")
+    LOGGER.info(f"Loading custom dataset {train_config.data.custom_dataset.name} from module {train_config.data.custom_dataset.module}")
     dataset_class = train_config.data.custom_dataset.name
     dataset_module = train_config.data.custom_dataset.module
     if not dataset_module:
