@@ -386,7 +386,7 @@ class Trainer:
 
         assert self.epoch is not None
         # Reshuffle dataset if needed.
-        if self.dataset.epoch != self.epoch and isinstance(self.dataset, IterableDataset):
+        if isinstance(self.dataset, IterableDataset) and self.dataset.epoch != self.epoch:
             log.info(f"Reshuffling data loader for epoch {self.epoch}...")
             self.dataset.reshuffle(self.epoch)
 
