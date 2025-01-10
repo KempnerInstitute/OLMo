@@ -36,7 +36,7 @@ srun \
   --cpus-per-task=$SLURM_CPUS_PER_TASK \
   --distribution=block:block \
   --kill-on-bad-exit \
-  scripts/run_with_environment.sh \
+  scripts/kempner_institute/run_with_environment.sh \
     python -u scripts/train.py configs/kempner_institute/7b_Olmo.yaml \
       --run_name=${SLURM_JOB_NAME}_${SLURM_JOB_ID} \
       ${@}
