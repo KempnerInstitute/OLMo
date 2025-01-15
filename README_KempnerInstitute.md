@@ -8,17 +8,27 @@ This section has been added to OLMo `README` page for Kempner Community to help 
 
 First create your conda environment using one of the following commands:
 
+Load the python module first and then create the conda environment.
+
+```bash
+module load python/3.10.13-fasrc01
+```
+
+Create a conda environment to hold your Olmo installation.
 You can name it `olmo_test` and add it in the conda environment default path:
 
 ```bash
-conda create --name olmo_test python=3.10
+mamba create --name olmo_test python=3.10
 ```
 
 Or if you wish to add it into a specific path you can use the following: 
 
 ```bash
-conda create --prefix [full_path_to_your_env] python=3.10
+mamba create --prefix [full_path_to_your_env] python=3.10
 ```
+
+We recommend using `mamba` instead of `conda` for faster installation. We recommend using a 
+prefix path as well as it makes sharing the environment with others easier.
 
 Activate the environment using:
 
@@ -34,10 +44,11 @@ conda activate [path_to_your_env]
 
 ### 1.2. Install PyTorch
 
-First install [PyTorch](https://pytorch.org) according to the instructions specific to your operating system.
+First install [PyTorch](https://pytorch.org) according to the instructions specific to your operating system. For installation 
+on the linux cluster using `mamba` and CUDA 12.4 (Cuda >=11.9 is required for H100 GPUS) you can use the following command:
 
 ```bash
-pip3 install torch
+mamba install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
 ```
 
 ### 1.3. Install OLMo from Source Code 
