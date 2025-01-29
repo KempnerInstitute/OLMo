@@ -1,3 +1,5 @@
+from collections import UserDict
+import dataclasses
 import logging
 import math
 from pathlib import Path
@@ -182,7 +184,9 @@ class IterableDataset(torch.utils.data.IterableDataset[Dict[str, Any]]):
 
     def _get_dataset_item(self, idx: int) -> Dict[str, Any]:
         item = self.dataset[idx]
-        if isinstance(item, dict):
+        if isinstance(item, dict) or isinstance(item, UserDict):
             return dict(**item, index=idx)
+        elif dataclasses.is_dataclass(item):
+            return dict(**dataclasses.asdict(item), index=idx)
         else:
             return {"input_ids": item, "index": idx}
