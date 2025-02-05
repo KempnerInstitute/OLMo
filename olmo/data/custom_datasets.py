@@ -27,7 +27,7 @@ def build_custom_dataset(data_config: DataConfig) -> Dataset:
         )
     module = importlib.import_module(dataset_module)
     dataset_class = getattr(module, dataset_class)
-    return dataset_class(**train_config.data.custom_dataset.args)  # type: ignore
+    return dataset_class(**data_config.custom_dataset.args)  # type: ignore
 
 
 def extract_module_and_class(name: str) -> Tuple[Optional[str], str]:
