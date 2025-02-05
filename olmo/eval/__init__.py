@@ -88,7 +88,7 @@ def build_evaluator(
             return MeanMetric(nan_strategy="error").to(device)
 
         eval_metric: Union[Metric, Dict[str, Metric]]
-        if eval_config.data.paths:
+        if eval_config.data.paths or eval_config.data.custom_dataset:
             eval_metric = make_metric()
         elif eval_config.data.datasets:
             eval_metric = {label: make_metric() for label in eval_config.data.datasets.keys()}

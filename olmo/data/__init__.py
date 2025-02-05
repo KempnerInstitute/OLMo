@@ -54,29 +54,29 @@ def build_memmap_dataset(
 
 
 
-def build_collator(train_config: TrainConfig) -> DataCollator:
-    if train_config.data.custom_dataset:
-        if train_config.data.custom_dataset.collate_fn:
-            module, function = extract_module_and_class(train_config.data.custom_dataset.collate_fn)
+def build_collator(train_config: TrainConfig, data_config: DataConfig) -> DataCollator:
+    if data_config.custom_dataset:
+        if data_config.custom_dataset.collate_fn:
+            module, function = extract_module_and_class(data_config.custom_dataset.collate_fn)
             if module is None:
-                if train_config.data.custom_dataset.module is None:
-                    module, _ = extract_module_and_class(train_config.data.custom_dataset.name)
+                if data_config.custom_dataset.module is None:
+                    module, _ = extract_module_and_class(data_config.custom_dataset.name)
                 else:
-                    module = train_config.data.custom_dataset.module
+                    module = data_config.custom_dataset.module
             try:
                 collator = getattr(importlib.import_module(module), function)
             except AttributeError:
-                raise OLMoConfigurationError(f"collate_fn {train_config.data.custom_dataset.collate_fn} not found in {module}. Please specify the full module path of the function.")
+                raise OLMoConfigurationError(f"collate_fn {data_config.custom_dataset.collate_fn} not found in {module}. Please specify the full module path of the function.")
             return collator
             
         return CustomDatasetDataCollator(
-            pad_direction=train_config.data.pad_direction,
+            pad_direction=data_config.pad_direction,
             pad_token_id=train_config.model.pad_token_id,
-            **train_config.data.custom_dataset.collate_config.asdict(),  # type: ignore
+            **data_config.custom_dataset.collate_config.asdict(),  # type: ignore
         )
     else:
         return DataCollator(
-            pad_direction=train_config.data.pad_direction, pad_token_id=train_config.model.pad_token_id
+            pad_direction=data_config.pad_direction, pad_token_id=train_config.model.pad_token_id
         )
 
 
@@ -86,8 +86,15 @@ def build_eval_dataloader(
     batch_size: int,
     shuffle: bool = True,
 ) -> DataLoader:
-    dataset = build_memmap_dataset(train_config, data_config, include_instance_metadata=True)
-    collator = DataCollator(pad_direction=data_config.pad_direction, pad_token_id=train_config.model.pad_token_id)
+    if data_config.custom_dataset:
+        if data_config.paths is not None or data_config.datasets is not None:
+            raise OLMoConfigurationError(
+                "custom_dataset_class is mutually exclusive with DataConfig.paths and DataConfig.datasets"
+            )
+        dataset = build_custom_dataset(data_config)
+    else:
+        dataset = build_memmap_dataset(train_config, data_config, include_instance_metadata=True)
+    collator = build_collator(train_config, data_config)
     if data_config.drop_last:
         # Make sure batch size is small enough.
         samples_per_device = len(dataset) // get_world_size()
@@ -125,13 +132,13 @@ def build_train_dataloader(
 ) -> DataLoader:
     assert train_config.device_train_batch_size is not None
     seed = train_config.data.seed if train_config.data.seed is not None else train_config.seed
-    collator = build_collator(train_config)
+    collator = build_collator(train_config, train_config.data)
     if train_config.data.custom_dataset:
         if train_config.data.paths is not None or train_config.data.datasets is not None:
             raise OLMoConfigurationError(
                 "custom_dataset_class is mutually exclusive with DataConfig.paths and DataConfig.datasets"
             )
-        dataset = build_custom_dataset(train_config)
+        dataset = build_custom_dataset(train_config.data)
     else:
         dataset = build_memmap_dataset(
             train_config, train_config.data, include_instance_metadata=include_instance_metadata
